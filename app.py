@@ -293,29 +293,13 @@ def get_ip_from_ipconfig():
         return 0
 
 
-def generate_qr_code(data):
-    """生成二维码并打印到终端"""
-    qr = qrcode.QRCode(
-        version=1,
-        error_correction=qrcode.constants.ERROR_CORRECT_L,
-        box_size=10,
-        border=4,
-    )
-    qr.add_data(data)
-    qr.make(fit=True)
-
-    # 将二维码绘制成 ASCII 字符
-    qr.print_ascii(invert=True)
-
-
 def generate_qr_terminal(url):
     # 获取当前终端的宽度
     terminal_width = shutil.get_terminal_size().columns
 
-    # 估算二维码的适合尺寸（尝试设置一个适合宽度的盒子大小）
-    max_size = terminal_width // 2  # 每个方格的大小，二维码会稍微有边框
-    box_size = max(1, max_size)  # 确保 box_size 至少为 1
-    border = 2  # 固定边框宽度
+    max_size = terminal_width // 2
+    box_size = max(1, max_size)
+    border = 2
 
     # 创建二维码对象
     qr = qrcode.QRCode(
@@ -328,16 +312,18 @@ def generate_qr_terminal(url):
     qr.add_data(url)
     qr.make(fit=True)
 
+    # 将二维码绘制成 ASCII 字符
+    # qr.print_ascii(invert=True)
+
     # 获取二维码的矩阵
     qr_matrix = qr.get_matrix()
 
-    # 输出二维码，使用 '■' 和空格字符
-    # for row in qr_matrix:
-    #     print(' '.join('■' if cell else ' ' for cell in row))
+    # 选择合适的输出字符：'█' 、 '■'、 '▆'、 '▇'
+    char = '█'
 
-    # 输出二维码，使用 '█' 和空格字符（在某些终端更适配）
+    # 输出二维码，使用选择的字符
     for row in qr_matrix:
-        print(' '.join('█' if cell else ' ' for cell in row))
+        print(' '.join(char if cell else ' ' for cell in row))
 
 
 if __name__ == '__main__':
@@ -346,16 +332,10 @@ if __name__ == '__main__':
         # ip = get_local_ip()
         ip = get_ip_from_ipconfig()
 
-        # print(f"* Running on all addresses (0.0.0.0)")
-        # print(f"* Running on http://127.0.0.1:{port}")
-        # print(f"* Running on http://{ip}:{port}")
-
         if ip != 0:
             address = f"http://{ip}:{port}"
 
-            print("请扫描以下二维码访问服务：")
-            print("")
-            generate_qr_code(address)
+            print("请扫描以下二维码或访问服务地址：")
             generate_qr_terminal(address)
 
             print(f"服务地址: {address}")
