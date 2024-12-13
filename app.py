@@ -270,19 +270,22 @@ def get_ip_from_ipconfig():
         result = subprocess.run(["ipconfig"], capture_output=True, text=True, shell=True)
         output = result.stdout
 
-        # 匹配 IPv4 地址块
-        ipv4_pattern = re.compile(
-            r"(?P<interface>.*?适配器 .*?):\s*(?:(?!\n\n).)*?IPv4 地址.*?:\s*(?P<ip>[\d.]+)",
-            re.DOTALL
-        )
+        # 按段分割每个适配器信息
+        adapter_blocks = re.split(r"\n(?=\S+适配器 )", output)
 
-        # 适配器优先级列表
-        interface_priority = ["无线局域网适配器 WLAN", "以太网"]
+        # 正则匹配适配器名称和 IPv4 地址
+        ipv4_pattern = re.compile(r"^(?P<interface>.*?适配器 .*?):.*?IPv4 地址.*?:\s*(?P<ip>[\d.]+)", re.DOTALL)
 
-        # 提取所有匹配的接口名称和 IPv4 地址
-        matches = ipv4_pattern.findall(output)
+        matches = []
+        for block in adapter_blocks:
+            match = ipv4_pattern.search(block)
+            if match:
+                matches.append((match.group("interface"), match.group("ip")))
 
-        # 根据优先级返回第一个匹配的地址
+        # 优先级列表
+        interface_priority = ["无线局域网适配器", "以太网"]
+
+        # 按优先级返回第一个匹配结果
         for preferred in interface_priority:
             for interface, ip in matches:
                 if preferred in interface:
